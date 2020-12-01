@@ -44,7 +44,7 @@ type PostResponse {
 type Query {
   hello: String!
   me: User
-  post(id: String!): Post!
+  post(id: String!): PostResponse!
   posts: [Post!]!
   user(id: String!): User!
   users: [User!]!
@@ -55,6 +55,7 @@ type User {
   _id: String!
   createdAt: Float!
   email: String!
+  posts: PostResponse!
   updatedAt: Float!
   username: String!
 }

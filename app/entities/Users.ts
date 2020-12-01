@@ -1,6 +1,7 @@
 import { ObjectType, Field } from "type-graphql";
 // import * as mongoose from "mongoose";
 import { prop as Property, getModelForClass } from "@typegoose/typegoose";
+import { PostResponse } from "../resolvers/post";
 
 @ObjectType({ description: "The Users Model" })
 export class User {
@@ -19,6 +20,10 @@ export class User {
   // @Field(() => String)
   @Property({ required: true, nullable: false })
   password: string;
+
+  @Field(() => PostResponse)
+  @Property({ required: false, nullable: true })
+  posts?: PostResponse;
 
   @Field()
   createdAt: number;

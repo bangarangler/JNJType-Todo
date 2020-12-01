@@ -6,17 +6,17 @@ import {
   Ctx,
   Field,
   ObjectType,
-  // UseMiddleware,
+  UseMiddleware,
   // FieldResolver,
   // Root,
 } from "type-graphql";
 import { Post, PostModel } from "../entities/Post";
+// import { ObjectId } from "mongodb";
 // import * as mongoose from "mongoose";
 import { MyContext } from "../types";
-import { COOKIE_NAME } from "../constants";
 // import { UserRegisterInput } from "./types/user-register-input";
 // import argon2 from "argon2";
-// import { isAuth } from "../middleware/isAuth";
+import { isAuth } from "../middleware/isAuth";
 // import { UserRegisterInput } from "./types/user-input";
 
 // import { Cart, CartModel } from "../entities/Cart";
@@ -30,7 +30,7 @@ class PostError {
 }
 
 @ObjectType()
-class PostResponse {
+export class PostResponse {
   @Field(() => [PostError], { nullable: true })
   errors?: PostError[];
 
@@ -40,9 +40,52 @@ class PostResponse {
 
 @Resolver(() => PostResponse)
 export class PostResolver {
-  @Query(() => Post, { nullable: false })
-  async post(@Arg("id") id: string) {
-    return await PostModel.findById({ _id: id });
+  @Query(() => PostResponse, { nullable: false })
+  @UseMiddleware(isAuth)
+  async post(
+    @Arg("id") id: string,
+    @Ctx() { req, models }: MyContext
+  ): Promise<PostResponse> {
+    try {
+      const { PostModel } = models;
+      const post = await PostModel.findById({ _id: id });
+      console.log("sessionId", req.session.userId);
+      console.log("post", post);
+      if (!post) {
+        const errors = [
+          {
+            field: "No Post",
+            message: "No Post Found with that id",
+          },
+        ];
+        return { errors };
+      }
+      const creatorId = post.creatorId;
+      console.log("postId", id);
+      console.log("creatorId", creatorId);
+      const filter = { $and: [{ creatorId }, { _id: id }] };
+      const singlePost = await PostModel.findOne(filter);
+      console.log("singlePost", singlePost);
+      if (!singlePost) {
+        const errors = [
+          {
+            field: "Not Your Post",
+            message: "Sorry this post don't belong to you.",
+          },
+        ];
+        return { errors };
+      }
+      return { post: singlePost };
+    } catch (err) {
+      console.log("err from fetching single post", err);
+      const errors = [
+        {
+          field: "internal",
+          message: "Something went wrong internally.",
+        },
+      ];
+      return { errors };
+    }
   }
 
   @Query(() => [Post])
@@ -58,7 +101,7 @@ export class PostResolver {
     @Arg("body") body: string
     // @Arg("creatorId") creatorId: string
   ): Promise<PostResponse> {
-    const { Post, PostModel } = models;
+    const { PostModel } = models;
     try {
       const creatorId = req.session.userId;
       if (!title) {
