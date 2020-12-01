@@ -10,7 +10,7 @@ import { models } from "./entities/index";
 import session from "express-session";
 import cors from "cors";
 const MongoDBStore = require("connect-mongodb-session")(session);
-import { COOKIE_NAME, __prod__ } from "./constants";
+import { COOKIE_NAME, __dev__, __prod__ } from "./constants";
 // import { typedInputs } from "./resolvers/types/index";
 
 // resolvers
@@ -38,12 +38,22 @@ const main = async () => {
       collection: "session-details",
     });
     if (!store) throw new Error("error creating store");
-    app.use(
-      cors({
-        origin: "http://localhost:3000",
-        credentials: true,
-      })
-    );
+    const whitelist = [
+      "https://studio.apollographql.com",
+      "http://localhost:3000",
+    ];
+    const corsOptions = {
+      origin: function (origin: any, callback: any) {
+        if (whitelist.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      // origin: whitelist,
+      credentials: true,
+    };
+    app.use(cors(corsOptions));
 
     const server = new ApolloServer({
       schema,
@@ -62,7 +72,9 @@ const main = async () => {
         cookie: {
           maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
           httpOnly: true,
-          sameSite: "lax",
+          // sameSite: "lax",
+          sameSite: __dev__,
+          // sameSite: "None; Secure",
           secure: __prod__,
         },
         saveUninitialized: false,
