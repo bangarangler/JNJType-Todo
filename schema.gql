@@ -41,11 +41,16 @@ type PostResponse {
   post: Post
 }
 
+type PostsResponse {
+  errors: [PostError!]
+  posts: [Post!]
+}
+
 type Query {
   hello: String!
   me: User
   post(id: String!): PostResponse!
-  posts: [Post!]!
+  posts: PostsResponse!
   user(id: String!): User!
   users: [User!]!
 }
@@ -55,7 +60,6 @@ type User {
   _id: String!
   createdAt: Float!
   email: String!
-  posts: PostResponse!
   updatedAt: Float!
   username: String!
 }

@@ -10,7 +10,7 @@ import {
   // FieldResolver,
   // Root,
 } from "type-graphql";
-import { Post, PostModel } from "../entities/Post";
+import { Post } from "../entities/Post";
 // import { ObjectId } from "mongodb";
 // import * as mongoose from "mongoose";
 import { MyContext } from "../types";
@@ -36,6 +36,15 @@ export class PostResponse {
 
   @Field(() => Post, { nullable: true })
   post?: Post;
+}
+
+@ObjectType()
+export class PostsResponse {
+  @Field(() => [PostError], { nullable: true })
+  errors?: PostError[];
+
+  @Field(() => [Post], { nullable: true })
+  posts?: Post[];
 }
 
 @Resolver(() => PostResponse)
@@ -88,9 +97,46 @@ export class PostResolver {
     }
   }
 
-  @Query(() => [Post])
-  async posts() {
-    return await PostModel.find();
+  @Query(() => PostsResponse)
+  async posts(@Ctx() { req, models }: MyContext): Promise<PostsResponse> {
+    try {
+      const { UserModel, PostModel } = models;
+      console.log("req.session", req.session.userId);
+      const user = await UserModel.findOne({ _id: req.session.userId });
+      if (!user) {
+        const errors = [
+          {
+            field: "noUser",
+            message: "Need to Login To Get Your Posts",
+          },
+        ];
+        return { errors };
+      }
+      const filter = { creatorId: user._id };
+      console.log("user", user);
+      const postsForUser = await PostModel.find(filter);
+      console.log("postsForUser", postsForUser);
+      if (!postsForUser) {
+        const errors = [
+          {
+            field: "noPosts",
+            message: "No Posts Found Four User.",
+          },
+        ];
+        return { errors };
+      }
+      console.log("should be returning postsForUser");
+      return { posts: postsForUser };
+    } catch (err) {
+      console.log("internal error on posts route");
+      const errors = [
+        {
+          field: "internal",
+          message: "Something went wrong internally, sorry",
+        },
+      ];
+      return { errors };
+    }
   }
 
   @Mutation(() => PostResponse)
