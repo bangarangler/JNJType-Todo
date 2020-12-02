@@ -115,11 +115,13 @@ export class CommentResolver {
   }
 
   @Subscription(() => String, {
-    subscribe: (parent, args, ctx) => {
-      console.log("ctx", ctx);
-      // return pubSub.publish.asyncIterator(["NEW_COMMENT"]);
-      // asyncIterator(["NEW_COMMENT"]);
-    },
+    topics: ["MESSAGES", "NEW_COMMENT"],
+    // subscribe: (parent, args, ctx) => {
+    //   console.log("ctx", ctx);
+    //   return "test"
+    // return pubSub.publish.asyncIterator(["NEW_COMMENT"]);
+    // asyncIterator(["NEW_COMMENT"]);
+    // },
   })
   // newNotification(): Notification {
   //   return {
@@ -130,9 +132,9 @@ export class CommentResolver {
     // return "stuff";
     return connection?.pubsub.asyncIterator(["NEW_COMMENT"]);
   }
-  // @Query(() => String)
-  // async hello(@Ctx() { connection }: MyContext) {
-  //   await connection?.pubsub.publish("MESSAGES");
-  //   return "HELLO WORLD";
-  // }
+  @Query(() => String)
+  async hello(@Ctx() {}: MyContext) {
+    // await connection?.pubsub.publish("MESSAGES");
+    return "HELLO WORLD";
+  }
 }
