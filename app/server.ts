@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { ApolloServer, PubSub } from "apollo-server-express";
 import bodyParser from "body-parser";
-import http from "http";
+// import http from "http";
 import Express from "express";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
@@ -23,9 +23,11 @@ import { CommentResolver } from "./resolvers/comment";
 
 const main = async () => {
   try {
+    const pubsub = new PubSub();
     const schema = await buildSchema({
       resolvers: [HelloResolver, UserResolver, PostResolver, CommentResolver],
       emitSchemaFile: true,
+      pubSub: pubsub,
       validate: false,
     });
 
@@ -35,7 +37,7 @@ const main = async () => {
       { useNewUrlParser: true, useUnifiedTopology: true }
     );
     mongoose.connection;
-    const app = Express();
+    // const app = Express();
     const store = await new MongoDBStore({
       uri: process.env.MONGO_URI,
       collection: "session-details",
@@ -44,6 +46,8 @@ const main = async () => {
     const whitelist = [
       "https://studio.apollographql.com",
       "http://localhost:3000",
+      "http://localhost:4000/graphql",
+      "ws://localhost:4000/graphql",
     ];
     const corsOptions = {
       origin: function (origin: any, callback: any) {
@@ -56,23 +60,25 @@ const main = async () => {
       // origin: whitelist,
       credentials: true,
     };
+    const app = Express();
+    // app.use(cors());
     app.use(cors(corsOptions));
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(bodyParser.json());
 
-    const pubsub = new PubSub();
+    // const pubsub = new PubSub();
 
     const server = new ApolloServer({
       schema,
-      context: ({ req, res, connection }): MyContext => {
-        if (connection) {
-          console.log("in connection if block");
-          connection.pubsub = pubsub;
-          // connection.pubsub = pubsub;
-          return { connection };
-        } else {
-          return { req, res, models, store };
-        }
+      context: ({ req, res }): MyContext => {
+        // if (connection) {
+        // console.log("in connection if block");
+        // connection.pubsub = pubsub;
+        // connection.pubsub = pubsub;
+        // return { connection } as any;
+        // } else {
+        return { req, res, models, store };
+        // }
       },
       playground: {
         settings: {
@@ -98,10 +104,26 @@ const main = async () => {
         secret: process.env.COOKIE_SECRET!,
       })
     );
+
     server.applyMiddleware({ app, cors: false });
+    // const httpServer = http.createServer(app);
+    // server.installSubscriptionHandlers(httpServer);
+    // try {
+    //   const port = process.env.PORT || 5000;
+    //   httpServer.listen(port, () => {
+    //     console.log(`Server running on port ${port}`);
+    //     console.log(
+    //       `Subscriptions ready at ws://localhost:${port}${server.subscriptionsPath}`
+    //     );
+    //   });
+    // } catch (err) {
+    //   console.log("err", err);
+    // }
+    // const {url} = await server.listen(process.env.PORT || 5000)
     app.listen({ port: process.env.PORT || 5000 }, () => {
       console.log(
         `🚀 Server ready and listening at ==> http://localhost:4000${server.graphqlPath}`
+        // `🚀 Server ready and listening at ==> ${url}`
       );
     });
   } catch (err) {

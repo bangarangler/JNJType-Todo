@@ -82,6 +82,10 @@ type Query {
   users: [User!]!
 }
 
+type Subscription {
+  newComment: String!
+}
+
 """The Users Model"""
 type User {
   _id: String!

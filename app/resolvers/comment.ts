@@ -8,6 +8,7 @@ import {
   Field,
   ObjectType,
   UseMiddleware,
+  PubSub,
 } from "type-graphql";
 import { Comment } from "../entities/Comment";
 import { MyContext } from "../types";
@@ -79,6 +80,7 @@ export class CommentResolver {
   async createComment(
     @Arg("postId") postId: string,
     @Arg("body") body: string,
+    @PubSub("NEW_COMMENT") publish: any,
     @Ctx() { req, models }: MyContext
   ): Promise<CommentResponse> {
     const { CommentModel, PostModel } = models;
@@ -87,7 +89,7 @@ export class CommentResolver {
       if (!body || body === "")
         errors.push({ field: "comment", message: "empty" });
       console.log("postId :>> ", postId);
-      if (!postId || postId === "" || !req.session.userId)
+      if (!postId || postId === "" || !req?.session.userId)
         errors.push({ field: "args", message: "missing arguments" });
       if (errors.length > 0) throw [...errors];
 
@@ -98,12 +100,13 @@ export class CommentResolver {
       const newComment = {
         body,
         postId,
-        creatorId: req.session.userId,
+        creatorId: req?.session.userId,
       };
       const res = await CommentModel.create(newComment);
 
       if (!res) throw "couldn't add to DB";
 
+      await publish({ newComment: res });
       return { comment: res };
     } catch (error) {
       console.log("error :>> ", error);
@@ -111,11 +114,25 @@ export class CommentResolver {
     }
   }
 
-  // @Subscription(() => CommentResponse, {nullable: false})
-  // @UseMiddleware(isAuth)
-  // async newComment() {
-  //   subscribe: (_, __, {connection}) => {
-  //     return connection.pubsub.asyncIterator(["NEW_COMMENT"])
+  @Subscription(() => String, {
+    subscribe: (parent, args, ctx) => {
+      console.log("ctx", ctx);
+      // return pubSub.publish.asyncIterator(["NEW_COMMENT"]);
+      // asyncIterator(["NEW_COMMENT"]);
+    },
+  })
+  // newNotification(): Notification {
+  //   return {
+  //
   //   }
+  // }
+  async newComment(@Ctx() { connection }: MyContext) {
+    // return "stuff";
+    return connection?.pubsub.asyncIterator(["NEW_COMMENT"]);
+  }
+  // @Query(() => String)
+  // async hello(@Ctx() { connection }: MyContext) {
+  //   await connection?.pubsub.publish("MESSAGES");
+  //   return "HELLO WORLD";
   // }
 }
