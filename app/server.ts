@@ -1,6 +1,8 @@
 import * as dotenv from "dotenv";
 dotenv.config();
-import { ApolloServer } from "apollo-server-express";
+import { ApolloServer, PubSub } from "apollo-server-express";
+import bodyParser from "body-parser";
+import http from "http";
 import Express from "express";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
@@ -55,10 +57,23 @@ const main = async () => {
       credentials: true,
     };
     app.use(cors(corsOptions));
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(bodyParser.json());
+
+    const pubsub = new PubSub();
 
     const server = new ApolloServer({
       schema,
-      context: ({ req, res }): MyContext => ({ req, res, models, store }),
+      context: ({ req, res, connection }): MyContext => {
+        if (connection) {
+          console.log("in connection if block");
+          connection.pubsub = pubsub;
+          // connection.pubsub = pubsub;
+          return { connection };
+        } else {
+          return { req, res, models, store };
+        }
+      },
       playground: {
         settings: {
           "request.credentials": "include",

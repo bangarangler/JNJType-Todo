@@ -1,6 +1,7 @@
 import {
   Resolver,
   Mutation,
+  Subscription,
   Arg,
   Query,
   Ctx,
@@ -109,4 +110,12 @@ export class CommentResolver {
       return catchTypeChecker(error);
     }
   }
+
+  // @Subscription(() => CommentResponse, {nullable: false})
+  // @UseMiddleware(isAuth)
+  // async newComment() {
+  //   subscribe: (_, __, {connection}) => {
+  //     return connection.pubsub.asyncIterator(["NEW_COMMENT"])
+  //   }
+  // }
 }
