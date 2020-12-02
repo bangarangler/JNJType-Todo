@@ -3,8 +3,28 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+"""The comments model"""
+type Comment {
+  _id: String!
+  body: String!
+  createdAt: Float!
+  creatorId: String!
+  postId: String!
+  updatedAt: Float!
+}
+
+type CommentResponse {
+  comment: Comment
+  error: GeneralError
+  inputErrors: [InputError!]
+}
+
 type FieldError {
   field: String!
+  message: String!
+}
+
+type GeneralError {
   message: String!
 }
 
@@ -13,7 +33,13 @@ type Hello {
   hello: String!
 }
 
+type InputError {
+  field: String!
+  message: String!
+}
+
 type Mutation {
+  createComment(body: String!, postId: String!): CommentResponse!
   createPost(body: String!, title: String!): PostResponse!
   login(password: String!, usernameOrEmail: String!): UserResponse!
   logout: Boolean!
@@ -47,6 +73,7 @@ type PostsResponse {
 }
 
 type Query {
+  comment(id: String!): CommentResponse!
   hello: String!
   me: User
   post(id: String!): PostResponse!

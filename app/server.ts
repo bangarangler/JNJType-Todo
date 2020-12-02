@@ -17,11 +17,12 @@ import { COOKIE_NAME, __dev__, __prod__ } from "./constants";
 import { UserResolver } from "./resolvers/user";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
+import { CommentResolver } from "./resolvers/comment";
 
 const main = async () => {
   try {
     const schema = await buildSchema({
-      resolvers: [HelloResolver, UserResolver, PostResolver],
+      resolvers: [HelloResolver, UserResolver, PostResolver, CommentResolver],
       emitSchemaFile: true,
       validate: false,
     });
