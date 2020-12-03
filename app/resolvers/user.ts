@@ -53,7 +53,7 @@ export class UserResolver {
   @Query(() => User, { nullable: true })
   // @UseMiddleware(isAuth)
   async me(@Ctx() { req }: MyContext) {
-    if (!req.session.userId) {
+    if (!req?.session.userId) {
       return null;
     }
     return UserModel.findOne({ _id: req.session.userId });
@@ -98,7 +98,7 @@ export class UserResolver {
           password: hashedPw,
         };
         const haveUser = await UserModel.create(newUser);
-        req.session.userId = haveUser._id;
+        req!.session.userId = haveUser._id;
         return { user: haveUser };
       }
     } catch (err) {
@@ -147,7 +147,7 @@ export class UserResolver {
           ],
         };
       }
-      req.session.userId = user._id;
+      req!.session.userId = user._id;
       return { user };
     } catch (err) {
       console.log("err from login catch", err);
@@ -164,8 +164,8 @@ export class UserResolver {
   @Mutation(() => Boolean)
   logout(@Ctx() { req, res }: MyContext) {
     return new Promise((resolve) =>
-      req.session.destroy((err) => {
-        res.clearCookie(COOKIE_NAME);
+      req?.session.destroy((err) => {
+        res?.clearCookie(COOKIE_NAME);
         if (err) {
           console.log("err from logout promise: ", err);
           resolve(false);

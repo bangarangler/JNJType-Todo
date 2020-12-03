@@ -1,5 +1,8 @@
+import "reflect-metadata";
 import * as dotenv from "dotenv";
 dotenv.config();
+// import * as Redis from "ioredis";
+// import { RedisPubSub } from "graphql-redis-subscriptions"
 import { ApolloServer, PubSub } from "apollo-server-express";
 import bodyParser from "body-parser";
 // import http from "http";

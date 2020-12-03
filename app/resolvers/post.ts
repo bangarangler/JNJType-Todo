@@ -58,7 +58,7 @@ export class PostResolver {
     try {
       const { PostModel } = models;
       const post = await PostModel.findById({ _id: id });
-      console.log("sessionId", req.session.userId);
+      console.log("sessionId", req?.session.userId);
       console.log("post", post);
       if (!post) {
         const errors = [
@@ -101,8 +101,8 @@ export class PostResolver {
   async posts(@Ctx() { req, models }: MyContext): Promise<PostsResponse> {
     try {
       const { UserModel, PostModel } = models;
-      console.log("req.session", req.session.userId);
-      const user = await UserModel.findOne({ _id: req.session.userId });
+      console.log("req.session", req?.session.userId);
+      const user = await UserModel.findOne({ _id: req?.session.userId });
       if (!user) {
         const errors = [
           {
@@ -149,7 +149,7 @@ export class PostResolver {
   ): Promise<PostResponse> {
     const { PostModel } = models;
     try {
-      const creatorId = req.session.userId;
+      const creatorId = req?.session.userId;
       if (!title) {
         const errors = [
           {
